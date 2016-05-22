@@ -27,8 +27,7 @@
     #info {
         position: absolute;
         width: 100%;
-        height: 20%;
-        min-height: 200px;
+        height: auto;
     }
 
     #info {
@@ -36,7 +35,8 @@
         background: rgba(0, 0, 0, .8);
         right: 0;
         top: 0;
-        overflow: auto;
+        padding-bottom: 15px;
+        overflow: hidden;
     }
 
     #info .stat {
@@ -49,6 +49,7 @@
         font-size: 2em;
         color: #5f9eff;
         font-weight: 700;
+        margin:0;
     }
 
     #info .stat > span {
@@ -57,10 +58,12 @@
     }
 
     #url {
-        margin-top: 30px;
-        color: #000;
-        width: 100%;
+        color: #FFF;
+        margin: 10px 5%;
+        width: 90%;
         text-align: center;
+        background: rgba(0, 0, 0, 0);
+        border: 0;
     }
 
     #errors {
@@ -80,6 +83,7 @@
 
 <div id='map'></div>
 <div id='info'>
+    <input type="text" id="url" />
     <div id="distance" class="stat">
         <h2>Distance</h2>
         <span></span>
@@ -88,7 +92,6 @@
         <h2>Time</h2>
         <span></span>
     </div>
-    <input type="text" id="url" />
 </div>
 <script>
     function updateCurrentLocation() {
