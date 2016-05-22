@@ -57,7 +57,7 @@
     }
 
     #url {
-        padding-top: 30px;
+        margin-top: 30px;
         color: #fff;
         width: 100%;
         text-align: center;
@@ -163,7 +163,7 @@
     function setInfo(distance, duration) {
         $('#distance > span').html(distance/1000 + " km");
         $('#duration > span').html(Math.round(duration/60) + " min");
-        $('#url').value = 'http://' + window.location.hostname + '/track/' + $('body').data('track-id');
+        $('#url').val('http://' + window.location.hostname + '/track/' + $('body').data('track-id'));
     }
 
     L.mapbox.accessToken = 'pk.eyJ1IjoidGhld2lsZGhvcnNlIiwiYSI6ImNpbzA5enJtaDAwdWp3ZGx5Mm1heW40ZDQifQ.XmMqFHy-C5qx3yz9LiSmDg';
