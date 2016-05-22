@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8/>
+    <title>ZIS</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no'/>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'>
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"
+            integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+    <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet'/>
+    <style>
+        body { margin: 0; padding: 0; }
+
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body data-type="{{type}}" data-track-id="{{trackId}}" data-stream-id="{{streamId}}">
+
+
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+    }
+
+    #errors,
+    #info {
+        position: absolute;
+        width: 100%;
+        height: 20%;
+        min-height: 200px;
+    }
+
+    #info {
+        z-index: 99;
+        background: rgba(0, 0, 0, .8);
+        right: 0;
+        top: 0;
+        overflow: auto;
+    }
+
+    #info .stat {
+        width: 49%;
+        display: inline-block;
+        text-align: center;
+    }
+
+    #info .stat > h2 {
+        font-size: 2em;
+        color: #5f9eff;
+        font-weight: 700;
+    }
+
+    #info .stat > span {
+        font-size: 1.5em;
+        color: #FFF;
+    }
+
+    #url {
+        padding-top: 30px;
+        color: #fff;
+        width: 100%;
+        text-align: center;
+    }
+
+    #errors {
+        z-index: 8;
+        opacity: 0;
+        padding: 10px;
+        border-radius: 0 0 3px 3px;
+        background: rgba(0, 0, 0, .25);
+        top: 90px;
+        left: 10px;
+    }
+
+</style>
+
+<script src='/mapbox.directions.js'></script>
+<link rel='stylesheet' href='/mapbox.directions.css' type='text/css'/>
+
+<div id='map'></div>
+<div id='errors'></div>
+<div id='info'>
+    <div id="distance" class="stat">
+        <h2>Distance</h2>
+        <span></span>
+    </div>
+    <div id="duration" class="stat">
+        <h2>Time</h2>
+        <span></span>
+    </div>
+    <div id="url">
+
+    </div>
+</div>
+<script>
+    function updateCurrentLocation() {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            $.ajax({
+                type: 'POST',
+                url: '/data/' + $('body').data('stream-id'),
+                data: {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                },
+                success: function(data) {
+                    console.log('Updated current location.');
+                    setTimeout(updateCurrentLocation, 1000);
+                }
+            });
+        });
+    }
+
+    $(document).ready(function() {
+        var streamId = $('body').data('stream-id');
+        if(streamId !== undefined) {
+            updateCurrentLocation();
+        }
+    });
+</script>
+<script>
+    var typeMap = {
+        car: "mapbox.driving",
+        bike: "mapbox.cycling",
+        walk: "mapbox.walking"
+    }
+
+    function getData(callback) {
+        $.ajax({
+            type: 'GET',
+            url: '/data/' + $('body').data('track-id'),
+            success: function(data) {
+                callback(data);
+            }
+        });
+    }
+
+    var directionsLayer, directionsRoutesControl;
+    function refreshScreen() {
+        getData(function(data) {
+            map.attributionControl.setPosition('bottomleft');
+            var directions = L.mapbox.directions({
+                profile: typeMap[data.type],
+                alternatives: false,
+                steps: false,
+                units: "metric"
+            });
+
+            if(directionsLayer !== undefined) map.removeLayer(directionsLayer);
+            if(directionsRoutesControl !== undefined) map.removeLayer(directionsRoutesControl);
+            directionsLayer = L.mapbox.directions.layer(directions)
+                    .addTo(map);
+            directionsRoutesControl = L.mapbox.directions.routesControl('routes', directions)
+                    .addTo(map);
+
+            directions.setOrigin(L.latLng(data.lat, data.lng))
+                    .setDestination(L.latLng(data.destination.lat, data.destination.lng))
+                    .query({}, function(err, data) {
+                        setInfo(data.routes[0].distance, data.routes[0].duration);
+                    });
+
+            map.setView(L.latLng(data.lat, data.lng), 15);
+        });
+    }
+
+    function setInfo(distance, duration) {
+        $('#distance > span').html(distance/1000 + " km");
+        $('#duration > span').html(Math.round(duration/60) + " min");
+        $('#url').html('http://' + window.location.hostname + '/track/' + $('body').data('track-id'));
+    }
+
+    L.mapbox.accessToken = 'pk.eyJ1IjoidGhld2lsZGhvcnNlIiwiYSI6ImNpbzA5enJtaDAwdWp3ZGx5Mm1heW40ZDQifQ.XmMqFHy-C5qx3yz9LiSmDg';
+    var map = L.mapbox.map('map', 'mapbox.streets', {
+        zoomControl: false
+    });
+
+    $(document).ready(function() {
+        setInterval(refreshScreen, 1000);
+    });
+</script>
+
+</body>
+</html>

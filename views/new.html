@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>OnMyWay</title>
+
+        <!-- Sets initial viewport load and disables zooming  -->
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+
+        <!-- Makes your prototype chrome-less once bookmarked to your phone's home screen -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <!-- Include the compiled Ratchet CSS -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/ratchet/2.0.2/css/ratchet.min.css" rel="stylesheet">
+
+        <!-- Include the compiled Ratchet JS -->
+        <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.0-rc.2/jquery-ui.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ratchet/2.0.2/js/ratchet.min.js"></script>
+        <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+    </head>
+    <body>
+
+        <!-- Make sure all your bars are the first things in your <body> -->
+        <header class="bar bar-nav">
+            <h1 class="title">OnMyWay</h1>
+        </header>
+
+        <!-- Wrap all non-bar HTML in the .content div (this is actually what scrolls) -->
+        <div class="content">
+            <div class="content-padded">
+                <p>Enter your destination location and choose a transportation type to create a shareable tracking link:</p>
+                <form action="/new" method="POST">
+                    <input id="searchBox" type="search" placeholder="Destination">
+                    <div class="segmented-control">
+                        <a class="control-item active">Car</a>
+                        <a class="control-item">Walk</a>
+                        <a class="control-item">Bike</a>
+                    </div>
+                    <br>
+                    <button id="submit" class="btn btn-positive btn-block">Create Shared Location</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function getSelectedTransportType() {
+                var type;
+                switch($('.control-item.active').html()) {
+                    case 'Car':
+                        type = 'car';
+                        break;
+                    case 'Walk':
+                        type = 'walk';
+                        break;
+                    case 'Bike':
+                        type = 'bike';
+                        break;
+                    default:
+                        type = 'car';
+                        break;
+                }
+                return type;
+            }
+
+            $(document).ready(function() {
+                $('#submit').click(function(e) {
+                    e.preventDefault();
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        $.ajax({
+                            type: "POST",
+                            url: '/new',
+                            data: {
+                                location: $('#searchBox').val(),
+                                type: getSelectedTransportType(),
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            },
+                            success: function(data) {
+                                window.location.href = '/broadcast/' + data.streamId;
+                            }
+                        });
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
