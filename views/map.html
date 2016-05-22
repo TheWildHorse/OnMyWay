@@ -79,7 +79,6 @@
 <link rel='stylesheet' href='/mapbox.directions.css' type='text/css'/>
 
 <div id='map'></div>
-<div id='errors'></div>
 <div id='info'>
     <div id="distance" class="stat">
         <h2>Distance</h2>
@@ -89,9 +88,7 @@
         <h2>Time</h2>
         <span></span>
     </div>
-    <div id="url">
-
-    </div>
+    <input type="text" id="url" />
 </div>
 <script>
     function updateCurrentLocation() {
@@ -166,7 +163,7 @@
     function setInfo(distance, duration) {
         $('#distance > span').html(distance/1000 + " km");
         $('#duration > span').html(Math.round(duration/60) + " min");
-        $('#url').html('http://' + window.location.hostname + '/track/' + $('body').data('track-id'));
+        $('#url').value = 'http://' + window.location.hostname + '/track/' + $('body').data('track-id');
     }
 
     L.mapbox.accessToken = 'pk.eyJ1IjoidGhld2lsZGhvcnNlIiwiYSI6ImNpbzA5enJtaDAwdWp3ZGx5Mm1heW40ZDQifQ.XmMqFHy-C5qx3yz9LiSmDg';
