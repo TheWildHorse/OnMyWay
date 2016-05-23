@@ -76,6 +76,25 @@
         left: 10px;
     }
 
+    .center-button {
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #47a4ff;
+        color: #FFF;
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+    }
+
+    .center-button.disabled {
+        background-color: #c6c6c6;
+    }
+
+    .center-button > img {
+        height: 30px;
+        width: auto;
+    }
+
 </style>
 
 <script src='/mapbox.directions.js'></script>
@@ -93,6 +112,9 @@
         <span></span>
     </div>
 </div>
+<a class="center-button">
+    <img src="/marker.png" />
+</a>
 <script>
     function updateCurrentLocation() {
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -124,6 +146,8 @@
         bike: "mapbox.cycling",
         walk: "mapbox.walking"
     }
+
+    var centerMap = true;
 
     function getData(callback) {
         $.ajax({
@@ -159,7 +183,9 @@
                         setInfo(data.routes[0].distance, data.routes[0].duration);
                     });
 
-            map.setView(L.latLng(data.lat, data.lng), 15);
+            if(centerMap) {
+                map.setView(L.latLng(data.lat, data.lng), 15);
+            }
         });
     }
 
@@ -175,7 +201,11 @@
     });
 
     $(document).ready(function() {
-        setInterval(refreshScreen, 5000);
+        setInterval(refreshScreen, 1000);
+        $('.center-button').click(function() {
+            $('.center-button').toggleClass('disabled');
+            centerMap = !centerMap;
+        });
     });
 </script>
 
