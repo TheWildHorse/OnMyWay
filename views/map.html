@@ -148,6 +148,13 @@
     }
 
     var centerMap = true;
+    var shouldRecalculateRoute = true;
+    var currentDistance = null;
+
+    L.mapbox.accessToken = 'pk.eyJ1IjoidGhld2lsZGhvcnNlIiwiYSI6ImNpbzA5enJtaDAwdWp3ZGx5Mm1heW40ZDQifQ.XmMqFHy-C5qx3yz9LiSmDg';
+    var map = L.mapbox.map('map', 'mapbox.streets', {
+        zoomControl: false
+    });
 
     function getData(callback) {
         $.ajax({
@@ -159,34 +166,44 @@
         });
     }
 
-    var directionsLayer, directionsRoutesControl;
+    var directionsLayer, directionsRoutesControl, directions;
     function refreshScreen() {
         getData(function(data) {
             map.attributionControl.setPosition('bottomleft');
-            var directions = L.mapbox.directions({
+            directions = L.mapbox.directions({
                 profile: typeMap[data.type],
                 alternatives: false,
                 steps: false,
                 units: "metric"
             });
 
-            if(directionsLayer !== undefined) map.removeLayer(directionsLayer);
-            if(directionsRoutesControl !== undefined) map.removeLayer(directionsRoutesControl);
-            directionsLayer = L.mapbox.directions.layer(directions)
-                    .addTo(map);
-            directionsRoutesControl = L.mapbox.directions.routesControl('routes', directions)
-                    .addTo(map);
+            if(shouldRecalculateRoute) {
+                shouldRecalculateRoute = false;
+                recalculateRoute(directions, data);
+            }
 
-            directions.setOrigin(L.latLng(data.lat, data.lng))
-                    .setDestination(L.latLng(data.destination.lat, data.destination.lng))
-                    .query({}, function(err, data) {
-                        setInfo(data.routes[0].distance, data.routes[0].duration);
-                    });
+            directionsLayer.originMarker.setLatLng(L.latLng(data.lat, data.lng));
+
+            directions
+                .setOrigin(L.latLng(data.lat, data.lng))
+                .setDestination(L.latLng(data.destination.lat, data.destination.lng))
+                .query({}, function(err, data) {
+                    setInfo(data.routes[0].distance, data.routes[0].duration);
+                });
 
             if(centerMap) {
                 map.setView(L.latLng(data.lat, data.lng), 15);
             }
         });
+    }
+
+    function recalculateRoute(directions, data) {
+        if(directionsLayer !== undefined) map.removeLayer(directionsLayer);
+        if(directionsRoutesControl !== undefined) map.removeLayer(directionsRoutesControl);
+        directionsLayer = L.mapbox.directions.layer(directions)
+                .addTo(map);
+        directionsRoutesControl = L.mapbox.directions.routesControl('routes', directions)
+                .addTo(map);
     }
 
     function setInfo(distance, duration) {
@@ -195,13 +212,12 @@
         $('#url').val('http://' + window.location.hostname + '/track/' + $('body').data('track-id'));
     }
 
-    L.mapbox.accessToken = 'pk.eyJ1IjoidGhld2lsZGhvcnNlIiwiYSI6ImNpbzA5enJtaDAwdWp3ZGx5Mm1heW40ZDQifQ.XmMqFHy-C5qx3yz9LiSmDg';
-    var map = L.mapbox.map('map', 'mapbox.streets', {
-        zoomControl: false
-    });
 
     $(document).ready(function() {
-        setInterval(refreshScreen, 1000);
+        setInterval(refreshScreen, 500);
+        setInterval(function() {
+            shouldRecalculateRoute = true;
+        }, 10000);
         $('.center-button').click(function() {
             $('.center-button').toggleClass('disabled');
             centerMap = !centerMap;
